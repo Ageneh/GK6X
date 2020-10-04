@@ -778,12 +778,14 @@ namespace GK6X
                                                     EnsureRemainingPacketIsEmpty(packet, directionStr);
                                                     break;
                                                 case OpCodes_DriverMacro.MouseState:
-                                                    DriverValueMouseButton mouseState = (DriverValueMouseButton)packet.ReadByte();
+                                                    DriverValueMouseButton mouseState =
+ (DriverValueMouseButton)packet.ReadByte();
                                                     Log("Macro mouse: " + mouseState);
                                                     EnsureRemainingPacketIsEmpty(packet, directionStr);
                                                     break;
                                                 case OpCodes_DriverMacro.KeyboardState:
-                                                    DriverValueModifer modifiers = (DriverValueModifer)packet.ReadByte();
+                                                    DriverValueModifer modifiers =
+ (DriverValueModifer)packet.ReadByte();
                                                     List<DriverValue> pressedKeysDriverValues = new List<DriverValue>();
                                                     byte key;
                                                     while ((key = packet.ReadByte()) != 0)
@@ -1089,7 +1091,8 @@ namespace GK6X
         static bool OnWriteFile(IntPtr hFile, IntPtr lpBuffer, int nNumberOfBytesToWrite, out int lpNumberOfBytesWritten, IntPtr lpOverlapped)
         {
             // Don't use Log in here (or other file IO operations)
-            bool result = writeFileOriginal(hFile, lpBuffer, nNumberOfBytesToWrite, out lpNumberOfBytesWritten, lpOverlapped);
+            bool result =
+ writeFileOriginal(hFile, lpBuffer, nNumberOfBytesToWrite, out lpNumberOfBytesWritten, lpOverlapped);
 
             UpdateCurrentDevice(hFile);
             if (currentDevice == hFile)
@@ -1115,7 +1118,8 @@ namespace GK6X
 
         static bool OnReadFile(IntPtr hFile, IntPtr lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, IntPtr lpOverlapped)
         {
-            bool result = readFileOriginal(hFile, lpBuffer, nNumberOfBytesToRead, out lpNumberOfBytesRead, lpOverlapped);
+            bool result =
+ readFileOriginal(hFile, lpBuffer, nNumberOfBytesToRead, out lpNumberOfBytesRead, lpOverlapped);
             UpdateCurrentDevice(hFile);
 
             if (currentDevice == hFile)
@@ -1172,9 +1176,11 @@ namespace GK6X
             }
 
             // Don't use Log in here (or other file IO operations)
-            IntPtr result = createFileWOriginal(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+            IntPtr result =
+ createFileWOriginal(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 
-            const string hidGuid = "4D1E55B2-F16F-11CF-88CB-001111000030";// Registry where all devices tagged as HID belong
+            const string hidGuid =
+ "4D1E55B2-F16F-11CF-88CB-001111000030";// Registry where all devices tagged as HID belong
             if (result != IntPtr.Zero && !string.IsNullOrEmpty(lpFileName) && lpFileName.ToUpper().Contains(hidGuid))
             {
                 /*string manufacturer = Interop.GetManufacturerString(result);
@@ -1264,19 +1270,22 @@ namespace GK6X
             writeFileHook = OnWriteFile;
             writeFileHookPtr = Marshal.GetFunctionPointerForDelegate(writeFileHook);
             Hook.WL_CreateHook(kernel32_writeFile, writeFileHookPtr, ref writeFileOriginalPtr);
-            writeFileOriginal = (WriteFileDelegate)Marshal.GetDelegateForFunctionPointer(writeFileOriginalPtr, typeof(WriteFileDelegate));
+            writeFileOriginal =
+ (WriteFileDelegate)Marshal.GetDelegateForFunctionPointer(writeFileOriginalPtr, typeof(WriteFileDelegate));
             Hook.WL_EnableHook(kernel32_writeFile);
 
             readFileHook = OnReadFile;
             readFileHookPtr = Marshal.GetFunctionPointerForDelegate(readFileHook);
             Hook.WL_CreateHook(kernel32_readFile, readFileHookPtr, ref readFileOriginalPtr);
-            readFileOriginal = (ReadFileDelegate)Marshal.GetDelegateForFunctionPointer(readFileOriginalPtr, typeof(ReadFileDelegate));
+            readFileOriginal =
+ (ReadFileDelegate)Marshal.GetDelegateForFunctionPointer(readFileOriginalPtr, typeof(ReadFileDelegate));
             Hook.WL_EnableHook(kernel32_readFile);
 
             getOverlappedResultHook = OnGetOverlappedResult;
             getOverlappedResultHookPtr = Marshal.GetFunctionPointerForDelegate(getOverlappedResultHook);
             Hook.WL_CreateHook(kernel32_getOverlappedResult, getOverlappedResultHookPtr, ref getOverlappedResultOriginalPtr);
-            getOverlappedResultOriginal = (GetOverlappedResultDelegate)Marshal.GetDelegateForFunctionPointer(getOverlappedResultOriginalPtr, typeof(GetOverlappedResultDelegate));
+            getOverlappedResultOriginal =
+ (GetOverlappedResultDelegate)Marshal.GetDelegateForFunctionPointer(getOverlappedResultOriginalPtr, typeof(GetOverlappedResultDelegate));
             Hook.WL_EnableHook(kernel32_getOverlappedResult);
 
             // We can't hook CloseHandle from C# due to .NET Framework issues... can't callback to C# from C++ either
@@ -1285,7 +1294,8 @@ namespace GK6X
             createFileWHook = OnCreateFileW;
             createFileWHookPtr = Marshal.GetFunctionPointerForDelegate(createFileWHook);
             Hook.WL_CreateHook(kernel32_createFileW, createFileWHookPtr, ref createFileWOriginalPtr);
-            createFileWOriginal = (CreateFileWDelegate)Marshal.GetDelegateForFunctionPointer(createFileWOriginalPtr, typeof(CreateFileWDelegate));
+            createFileWOriginal =
+ (CreateFileWDelegate)Marshal.GetDelegateForFunctionPointer(createFileWOriginalPtr, typeof(CreateFileWDelegate));
             Hook.WL_EnableHook(kernel32_createFileW);
 
             Log("Fully initialized hooks");
@@ -1379,7 +1389,8 @@ namespace GK6X
                 public ushort NumberFeatureDataIndices;
             }
 
-            const int stringBufferLen = 512;// TODO: Find out the real limit on these strings (maybe malloc instead of alloca)
+            const int stringBufferLen =
+ 512;// TODO: Find out the real limit on these strings (maybe malloc instead of alloca)
 
             public static string GetManufacturerString(IntPtr handle)
             {
@@ -1492,7 +1503,8 @@ namespace GK6X
 
                 try
                 {
-                    bool success = CreateProcess(exePath, null, IntPtr.Zero, IntPtr.Zero, false, DEBUG_ONLY_THIS_PROCESS, IntPtr.Zero, null, ref si, out pi);
+                    bool success =
+ CreateProcess(exePath, null, IntPtr.Zero, IntPtr.Zero, false, DEBUG_ONLY_THIS_PROCESS, IntPtr.Zero, null, ref si, out pi);
                     if (!success)
                     {
                         return false;
@@ -1529,7 +1541,8 @@ namespace GK6X
                                 {
                                     LOAD_DLL_DEBUG_INFO loadDll = debugEvent.LoadDll;
 
-                                    StealEntryPointResult stealResult = TryStealEntryPoint(ref pi, ref entryPoint, entryPointInst);
+                                    StealEntryPointResult stealResult =
+ TryStealEntryPoint(ref pi, ref entryPoint, entryPointInst);
                                     switch (stealResult)
                                     {
                                         case StealEntryPointResult.FailGetModules:
@@ -2248,7 +2261,8 @@ namespace GK6X
                             return false;
                         }
 
-                        memAddr = VirtualAllocEx(process, IntPtr.Zero, (IntPtr)buffer.Length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                        memAddr =
+ VirtualAllocEx(process, IntPtr.Zero, (IntPtr)buffer.Length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
                         if (memAddr == IntPtr.Zero)
                         {
                             LogError("Unable to allocate memory in the target process");
@@ -2263,7 +2277,8 @@ namespace GK6X
                             return false;
                         }
 
-                        IntPtr thread = CreateRemoteThread(process, IntPtr.Zero, IntPtr.Zero, libAddr, memAddr, 0, IntPtr.Zero);
+                        IntPtr thread =
+ CreateRemoteThread(process, IntPtr.Zero, IntPtr.Zero, libAddr, memAddr, 0, IntPtr.Zero);
                         if (thread == IntPtr.Zero)
                         {
                             LogError("Unable to start thread in target process");
