@@ -1,0 +1,10 @@
+{
+	"request": {
+		"funcname": "ApplyConfig",
+		"AccoutID": 0,
+		"ModelID": 656801834,
+		"GUID": "84C7ECEB-863B-4A54-9554-8B33EB6D4AD3"
+	},
+	"requestType": "callFunc",
+	"token": "986f62b7-7c27-4b68-be98-ec26b1b30525"
+}

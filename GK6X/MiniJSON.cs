@@ -67,13 +67,13 @@ namespace MiniJSON {
 	//      }
 	//  }
 
-    /// <summary>
-    ///     This class encodes and decodes JSON strings.
-    ///     Spec. details, see http://www.json.org/
-    ///     JSON uses Arrays and Objects. These correspond here to the datatypes IList and IDictionary.
-    ///     All numbers are parsed to doubles.
-    /// </summary>
-    public static class Json {
+	/// <summary>
+	///     This class encodes and decodes JSON strings.
+	///     Spec. details, see http://www.json.org/
+	///     JSON uses Arrays and Objects. These correspond here to the datatypes IList and IDictionary.
+	///     All numbers are parsed to doubles.
+	/// </summary>
+	public static class Json {
 		public static bool TryGetValue<T>(Dictionary<string, object> data, string key, out T result) {
 			object obj;
 			if (data.TryGetValue(key, out obj) && obj != null && obj is T) {
@@ -85,24 +85,24 @@ namespace MiniJSON {
 			return false;
 		}
 
-        /// <summary>
-        ///     Parses the string json into a value
-        /// </summary>
-        /// <param name="json">A JSON string.</param>
-        /// <returns>An List&lt;object&gt;, a Dictionary&lt;string, object&gt;, a double, an integer,a string, null, true, or false</returns>
-        public static object Deserialize(string json) {
+		/// <summary>
+		///     Parses the string json into a value
+		/// </summary>
+		/// <param name="json">A JSON string.</param>
+		/// <returns>An List&lt;object&gt;, a Dictionary&lt;string, object&gt;, a double, an integer,a string, null, true, or false</returns>
+		public static object Deserialize(string json) {
 			// save the string for debug information
 			if (json == null) return null;
 
 			return Parser.Parse(json);
 		}
 
-        /// <summary>
-        ///     Converts a IDictionary / IList object or a simple type (string, int, etc.) into a JSON string
-        /// </summary>
-        /// <param name="json">A Dictionary&lt;string, object&gt; / List&lt;object&gt;</param>
-        /// <returns>A JSON encoded string, or null if object 'json' is not serializable</returns>
-        public static string Serialize(object obj) {
+		/// <summary>
+		///     Converts a IDictionary / IList object or a simple type (string, int, etc.) into a JSON string
+		/// </summary>
+		/// <param name="json">A Dictionary&lt;string, object&gt; / List&lt;object&gt;</param>
+		/// <returns>A JSON encoded string, or null if object 'json' is not serializable</returns>
+		public static string Serialize(object obj) {
 			return Serializer.Serialize(obj);
 		}
 

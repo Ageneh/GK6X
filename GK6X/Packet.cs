@@ -121,12 +121,10 @@ namespace GK6X {
 				return true;
 			}
 
-			if (stream.Length > 0) {
+			if (stream.Length > 0)
 				stream.Position = stream.Length - 1;
-			}
-			else {
+			else
 				stream.Position = 0;
-			}
 
 			InvalidRead = true;
 			return false;

@@ -13,13 +13,12 @@
 
 		public static byte[] BitsToBytes(bool[] bits) {
 			var result = new byte[bits.Length / 8];
-			for (var i = 0; i < bits.Length; i++) {
+			for (var i = 0; i < bits.Length; i++)
 				if (bits[i]) {
 					var byteIndex = i / 8;
 					var bitIndex = i % 8;
 					result[byteIndex] |= (byte) (1 << bitIndex);
 				}
-			}
 
 			return result;
 		}

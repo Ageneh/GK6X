@@ -112,6 +112,7 @@
         InitBuffers = 0x09
 	}
 
+	//----------> LAYERS
 	public enum KeyboardLayer {
 		Invalid,
 		Base = 1,

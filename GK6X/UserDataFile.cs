@@ -17,11 +17,11 @@ namespace GK6X {
 		private int nextLightingId;
 		private int nextMacroId;
 
-        /// <summary>
-        ///     If true all lighting data on the keyboard will be cleared (this is different to not providing any
-        ///     lighting which will just skip sending lighting data)
-        /// </summary>
-        public bool NoLighting;
+		/// <summary>
+		///     If true all lighting data on the keyboard will be cleared (this is different to not providing any
+		///     lighting which will just skip sending lighting data)
+		/// </summary>
+		public bool NoLighting;
 
 		public HashSet<KeyboardLayer> NoLightingLayers = new HashSet<KeyboardLayer>();
 
@@ -506,20 +506,20 @@ namespace GK6X {
 			public string Guid; // Used only for .cmf macros
 			public int Id;
 
-            /// <summary>
-            ///     Key names as defined in the "Macros" tab (this is seemingly not in the data files?)
-            /// </summary>
-            private Dictionary<string, DriverValue> keyNames = new Dictionary<string, DriverValue>();
+			/// <summary>
+			///     Key names as defined in the "Macros" tab (this is seemingly not in the data files?)
+			/// </summary>
+			private Dictionary<string, DriverValue> keyNames = new Dictionary<string, DriverValue>();
 
 			public string Name;
 			public byte RepeatCount;
 			public MacroRepeatType RepeatType;
 
-            /// <summary>
-            ///     If true a delay will be used on the last action. This can be useful where
-            ///     the macro is to be repeated multiple times and a constant delay is desired.
-            /// </summary>
-            public bool UseTrailingDelay;
+			/// <summary>
+			///     If true a delay will be used on the last action. This can be useful where
+			///     the macro is to be repeated multiple times and a constant delay is desired.
+			/// </summary>
+			public bool UseTrailingDelay;
 
 			public Macro(string name) {
 				Name = name;
@@ -657,56 +657,57 @@ namespace GK6X {
 				public MacroKeyState State;
 				public MacroKeyType Type;
 
-                /// <summary>
-                ///     Used for the web gui string name mappings <see cref="MacroKeyNames" />
-                /// </summary>
-                public string ValueStr;
+				/// <summary>
+				///     Used for the web gui string name mappings <see cref="MacroKeyNames" />
+				/// </summary>
+				public string ValueStr;
 			}
 		}
 
 		public class LightingEffect {
-            /// <summary>
-            ///     Total number of keys as seen by the lighting system
-            /// </summary>
-            public const int
+			/// <summary>
+			///     Total number of keys as seen by the lighting system
+			/// </summary>
+			public const int
 				NumKeys = 132; // (528/0x210 total bytes - see refs to this number in the disassembled code)
 
 			public const int MaxEffects = 32;
 
-            /// <summary>
-            ///     Total number of bytes used for static lighting (1 uint color value for each key)
-            /// </summary>
-            public const int NumStaticLightingBytes = 704; // (704/0x2C0 bytes, 176 ints)
+			/// <summary>
+			///     Total number of bytes used for static lighting (1 uint color value for each key)
+			/// </summary>
+			public const int NumStaticLightingBytes = 704; // (704/0x2C0 bytes, 176 ints)
 
-            /// <summary>
-            ///     Each frame holds an array of keys (location codes)
-            /// </summary>
-            public List<Frame> Frames = new List<Frame>();
+			private readonly UserDataFile owner;
+
+			/// <summary>
+			///     Each frame holds an array of keys (location codes)
+			/// </summary>
+			public List<Frame> Frames = new List<Frame>();
 
 			public int Id;
 
-            /// <summary>
-            ///     Used for static lighting. This maps from key location codes to an RGB value
-            /// </summary>
-            public Dictionary<int, uint> KeyColors = new Dictionary<int, uint>();
+			/// <summary>
+			///     Used for static lighting. This maps from key location codes to an RGB value
+			/// </summary>
+			public Dictionary<int, uint> KeyColors = new Dictionary<int, uint>();
 
-            /// <summary>
-            ///     The layers this effect should be used on
-            /// </summary>
-            public HashSet<KeyboardLayer> Layers = new HashSet<KeyboardLayer>();
+			/// <summary>
+			///     The layers this effect should be used on
+			/// </summary>
+			public HashSet<KeyboardLayer> Layers = new HashSet<KeyboardLayer>();
 
 			public string Name;
-			private readonly UserDataFile owner;
 
-            /// <summary>
-            ///     Lighting effect params / configs
-            /// </summary>
-            public List<Param> Params = new List<Param>();
+			/// <summary>
+			///     Lighting effect params / configs
+			/// </summary>
+			public List<Param> Params = new List<Param>();
 
-            /// <summary>
-            ///     Total number of frames (based on the frame count for each frame)
-            /// </summary>
-            public int TotalFrames;
+			/// <summary>
+			///     Total number of frames (based on the frame count for each frame)
+			/// </summary>
+			public int TotalFrames;
 
 			public LightingEffectType Type;
 
@@ -920,15 +921,15 @@ namespace GK6X {
 			}
 
 			public class Frame {
-                /// <summary>
-                ///     Number of frames this frame should be displayed
-                /// </summary>
-                public int Count;
+				/// <summary>
+				///     Number of frames this frame should be displayed
+				/// </summary>
+				public int Count;
 
-                /// <summary>
-                ///     Key location codes
-                /// </summary>
-                public HashSet<int> KeyCodes = new HashSet<int>();
+				/// <summary>
+				///     Key location codes
+				/// </summary>
+				public HashSet<int> KeyCodes = new HashSet<int>();
 			}
 
 			public class Param {
@@ -936,11 +937,11 @@ namespace GK6X {
 				public LightingEffectColorType ColorType;
 				public HashSet<int> Keys = new HashSet<int>();
 
-                /// <summary>
-                ///     If true the values used by RGB/breathing should be sent to the keyboard unmodified (regular lighting effect
-                ///     files have their values modified by an amount - 360/val for RGB, 100/val for breathing val2)
-                /// </summary>
-                public bool UseRawValues;
+				/// <summary>
+				///     If true the values used by RGB/breathing should be sent to the keyboard unmodified (regular lighting effect
+				///     files have their values modified by an amount - 360/val for RGB, 100/val for breathing val2)
+				/// </summary>
+				public bool UseRawValues;
 
 				public int Val1; // "Count" (used in RGB / breathing)
 				public int Val2; // "StayCount" (used in breathing)

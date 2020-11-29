@@ -16,10 +16,10 @@ namespace GK6X {
 		public byte FirmwareMinorVersion;
 		public Dictionary<uint, Key> KeysByDriverValue = new Dictionary<uint, Key>();
 
-        /// <summary>
-        ///     A unique name for every key. Keys with duplicate DriverValue entries will be given seperate names here.
-        /// </summary>
-        public Dictionary<string, Key> KeysByDriverValueName = new Dictionary<string, Key>();
+		/// <summary>
+		///     A unique name for every key. Keys with duplicate DriverValue entries will be given seperate names here.
+		/// </summary>
+		public Dictionary<string, Key> KeysByDriverValueName = new Dictionary<string, Key>();
 
 		public Dictionary<int, Key> KeysByLocationCode = new Dictionary<int, Key>();
 		public Dictionary<int, Key> KeysByLogicCode = new Dictionary<int, Key>();
@@ -34,11 +34,11 @@ namespace GK6X {
 
 		public string FirmwareVersion => "v" + FirmwareMajorVersion + "." + FirmwareMinorVersion;
 
-        /// <summary>
-        ///     The maximum value for a LogicCode understood by the keyboard.
-        ///     NOTE: Some logic codes are unused within this range.
-        /// </summary>
-        public int MaxLogicCode => bufferSizeA * bufferSizeB;
+		/// <summary>
+		///     The maximum value for a LogicCode understood by the keyboard.
+		///     NOTE: Some logic codes are unused within this range.
+		/// </summary>
+		public int MaxLogicCode => bufferSizeA * bufferSizeB;
 
 		public bool HasInitializedBufferes => MaxLogicCode > 0;
 
@@ -175,10 +175,10 @@ namespace GK6X {
 				}
 		}
 
-        /// <summary>
-        ///     Returns a DriverValue where each index specifies the LogicCode
-        /// </summary>
-        private uint[] GetDefaultProfileDriverValues() {
+		/// <summary>
+		///     Returns a DriverValue where each index specifies the LogicCode
+		/// </summary>
+		private uint[] GetDefaultProfileDriverValues() {
 			var profilePath = Path.Combine(Program.DataBasePath, "device", ModelId.ToString(), "data", "profile.json");
 			if (File.Exists(profilePath)) {
 				var modelData = Json.Deserialize(File.ReadAllText(profilePath)) as Dictionary<string, object>;
@@ -282,10 +282,10 @@ namespace GK6X {
 		public class Key {
 			public uint DriverValue;
 
-            /// <summary>
-            ///     Unique for a given key, even if there are keys with duplicate driver values
-            /// </summary>
-            public string DriverValueName;
+			/// <summary>
+			///     Unique for a given key, even if there are keys with duplicate driver values
+			/// </summary>
+			public string DriverValueName;
 
 			public string KeyName;
 			public int LocationCode;
@@ -306,10 +306,10 @@ namespace GK6X {
 		public Dictionary<string, object> FactoryDefaultModelData;
 		public uint[] FnKeySet;
 
-        /// <summary>
-        ///     Only used for "driver" layer? (17 01) <see cref="OpCodes.DriverLayerSetConfig" />
-        /// </summary>
-        public bool HasLeSet;
+		/// <summary>
+		///     Only used for "driver" layer? (17 01) <see cref="OpCodes.DriverLayerSetConfig" />
+		/// </summary>
+		public bool HasLeSet;
 
 		public byte[] KeyPressLightingEffect;
 		public uint[] KeySet;

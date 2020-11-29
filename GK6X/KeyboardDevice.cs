@@ -5,9 +5,9 @@ using HidSharp;
 
 namespace GK6X {
 	public class KeyboardDevice : IDisposable {
+		private readonly object locker = new object();
 		internal HidDevice device;
 		private int lastSentMessage;
-		private readonly object locker = new object();
 		internal HidStream stream;
 		public KeyboardState State { get; internal set; }
 		public bool IsClosed { get; private set; }

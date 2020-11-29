@@ -15,6 +15,22 @@ namespace GK6X {
 		private static readonly WebServer server = new WebServer(Port);
 		public static readonly TimeSpan PingTimeout = TimeSpan.FromSeconds(30);
 
+		private const string GET_DEVICE_LIST = "GetDeviceList";
+		private const string CHANGE_MODE = "ChangeMode";
+		private const string GET_PROFILE_LIST = "GetProfileList";
+		private const string READ_PROFILE = "ReadProfile";
+		private const string WRITE_PROFILE = "WriteProfile";
+		private const string DELETE_PROFILE = "DeleteProfile";
+		private const string APPLY_CONFIG = "ApplyConfig";
+		private const string READ_FILE = "ReadFile";
+		private const string WRITE_FILE = "WriteFile";
+		private const string READ_LE = "ReadLE";
+		private const string WRITE_LE = "WriteLE";
+		private const string DELETE_LE = "DeleteLE";
+		private const string READ_MACROFILE = "ReadMacrofile";
+		private const string WRITE_MACROFILE = "WriteMacrofile";
+		private const string DELETE_MACROFILE = "DeleteMacrofile";
+
 		public static DateTime LastPing => server.LastPing;
 
 		public static string UserDataPath => server.UserDataPath;
@@ -152,6 +168,7 @@ namespace GK6X {
 				}
 			}
 
+			// start server!
 			public void Start() {
 				LastPing = DateTime.Now;
 				dataPath = Program.GetDriverDir(Program.BasePath);
@@ -172,7 +189,10 @@ namespace GK6X {
 					listener.Start();
 					while (listener != null)
 						try {
+							// receive request from frontend
 							var context = listener.GetContext();
+							Program.Log("received request frontend");
+							Program.Log("context::" + context.Request);
 							Process(context);
 						}
 						catch { }
@@ -201,6 +221,20 @@ namespace GK6X {
 				}
 			}
 
+			private long ExtractModelId(Dictionary<string, object> request) {
+				return (long) Convert.ChangeType(request["ModelID"], typeof(long));
+			}
+
+			private int ExtractAccountId(Dictionary<string, object> request) {
+				return (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+			}
+
+			private int ExtractModeIndex(Dictionary<string, object> request) {
+				return (int) Convert.ChangeType(request["ModeIndex"], typeof(int));
+			}
+			
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			private void Process(HttpListenerContext context) {
 				LastPing = DateTime.Now;
 
@@ -223,6 +257,7 @@ namespace GK6X {
 					// This is for requests which don't need a response (used mostly for our crappy index.html error handler...)
 					const string successResponse = "OK!";
 
+					// index.html
 					if (context.Request.Url.AbsolutePath == "/" ||
 					    context.Request.Url.AbsolutePath.ToLower() == "/index.html") {
 						var indexFile = Path.Combine(dataPath, "index.html");
@@ -235,6 +270,7 @@ namespace GK6X {
 								"<script>" + injectedJs + "</script>");
 						}
 					}
+					// actions
 					else if (context.Request.Url.AbsolutePath.StartsWith("/cms_")) {
 						var postData = new StreamReader(context.Request.InputStream).ReadToEnd();
 						var json = Json.Deserialize(postData) as Dictionary<string, object>;
@@ -247,6 +283,7 @@ namespace GK6X {
 						}
 
 						session.LastAccess = DateTime.Now;
+						// do stuff based on request
 						switch (json["requestType"].ToString()) {
 							case "ping": {
 								lock (session.MessageQueue) {
@@ -256,26 +293,28 @@ namespace GK6X {
 								}
 							}
 								break;
+							// call an actual function/action
 							case "callFunc": {
+								// get function name
 								var request = Json.Deserialize((string) json["request"]) as Dictionary<string, object>;
 								switch (request["funcname"].ToString()) {
-									case "GetDeviceList": {
+									case GET_DEVICE_LIST: {
 										session.UpdateDeviceList();
 										response = successResponse;
 									}
 										break;
-									case "ChangeMode": {
-										var modelId = (long) Convert.ChangeType(request["ModelID"], typeof(long));
-										var modeIndex = (int) Convert.ChangeType(request["ModeIndex"], typeof(int));
-										foreach (var device in KeyboardDeviceManager.GetConnectedDevices())
-											if (device.State.ModelId == modelId)
-												device.SetLayer((KeyboardLayer) modeIndex);
+									case CHANGE_MODE: {
+										/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+										var modelId = ExtractModelId(request);
+										var modeIndex = ExtractModeIndex(request);
+										var keyboardDevice = KeyboardDeviceManager.GetConnectedDeviceByModelId(modelId);
+										if (keyboardDevice != null) keyboardDevice.SetLayer((KeyboardLayer) modeIndex);
 										response = successResponse;
 									}
 										break;
-									case "GetProfileList": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
-										var modelId = (long) Convert.ChangeType(request["ModelID"], typeof(long));
+									case GET_PROFILE_LIST: {
+										var accountId = ExtractAccountId(request);
+										var modelId = ExtractModelId(request);
 										LazyCreateAccount(accountId);
 										var modelDir = Path.Combine(UserDataPath, "Account", accountId.ToString(),
 											"Devices", modelId.ToString());
@@ -294,9 +333,9 @@ namespace GK6X {
 										}
 									}
 										break;
-									case "ReadProfile": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
-										var modelId = (long) Convert.ChangeType(request["ModelID"], typeof(long));
+									case READ_PROFILE: {
+										var accountId = ExtractAccountId(request);
+										var modelId = ExtractModelId(request);
 										var guid = (string) request["GUID"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(),
@@ -304,24 +343,29 @@ namespace GK6X {
 										if (File.Exists(file)) response = Encoding.UTF8.GetString(CMFile.Load(file));
 									}
 										break;
-									case "WriteProfile": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
-										var modelId = (long) Convert.ChangeType(request["ModelID"], typeof(long));
+									case WRITE_PROFILE: {
+										/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+										var accountId = ExtractAccountId(request);
+										var modelId = ExtractModelId(request);
 										var guid = (string) request["GUID"];
 										var data = (string) request["Data"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(),
 											"Devices", modelId.ToString(), guid + ".cmf");
 										if (File.Exists(file)) {
+											///// Write data to File (still dont know where these files are located)
 											File.WriteAllBytes(file,
-												CMFile.Encrypt(Encoding.UTF8.GetBytes(data), CMFileType.Profile));
+												CMFile.Encrypt(Encoding.UTF8.GetBytes(data),
+													CMFileType.Profile)
+											);
 											response = successResponse;
 										}
 									}
 										break;
-									case "DeleteProfile": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
-										var modelId = (long) Convert.ChangeType(request["ModelID"], typeof(long));
+									case DELETE_PROFILE: {
+										/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+										var accountId = ExtractAccountId(request);
+										var modelId = ExtractModelId(request);
 										var guid = (string) request["GUID"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(),
@@ -334,155 +378,11 @@ namespace GK6X {
 											catch { }
 									}
 										break;
-									case "ApplyConfig": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
-										var modelId = (long) Convert.ChangeType(request["ModelID"], typeof(long));
-										var guid = (string) request["GUID"];
-										LazyCreateAccount(accountId);
-										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(),
-											"Devices", modelId.ToString(), guid + ".cmf");
-										if (File.Exists(file)) {
-											var config = Encoding.UTF8.GetString(CMFile.Load(file));
-											var data = Json.Deserialize(config) as Dictionary<string, object>;
-											var modelIndex = (int) Convert.ChangeType(data["ModeIndex"], typeof(int));
-											var layer = (KeyboardLayer) modelIndex;
-
-											foreach (var device in KeyboardDeviceManager.GetConnectedDevices())
-												if (device.State.ModelId == modelId) {
-													var macrosById = new Dictionary<int, UserDataFile.Macro>();
-													var macrosUserDataFile = new UserDataFile();
-
-													//////////////////////////////////////////
-													// Keys
-													//////////////////////////////////////////
-													for (var i = 0; i < 2; i++) {
-														var setStr = i == 0 ? "KeySet" : "FnKeySet";
-														if (data.ContainsKey(setStr)) {
-															var driverValues = new uint[device.State.MaxLogicCode];
-															for (var j = 0; j < driverValues.Length; j++)
-																driverValues[j] = KeyValues.UnusedKeyValue;
-															var keys = data[setStr] as List<object>;
-															foreach (var keyObj in keys) {
-																var key = keyObj as Dictionary<string, object>;
-																var keyIndex = (int) Convert.ChangeType(key["Index"],
-																	typeof(int));
-																var driverValue = KeyValues.UnusedKeyValue;
-																var driverValueStr = (string) key["DriverValue"];
-																if (driverValueStr.StartsWith("0x")) {
-																	if (uint.TryParse(driverValueStr.Substring(2),
-																		NumberStyles.HexNumber, null,
-																		out driverValue)) {
-																		if (KeyValues.GetKeyType(driverValue) ==
-																		    DriverValueType.Macro &&
-																		    key.ContainsKey("Task")) {
-																			var task =
-																				key["Task"] as Dictionary<string, object
-																				>;
-																			if (task != null && (string) task["Type"] ==
-																				"Macro") {
-																				var taskData =
-																					task["Data"] as
-																						Dictionary<string, object>;
-																				var macroGuid =
-																					(string) taskData["GUID"];
-																				var macroFile =
-																					Path.Combine(UserDataPath,
-																						"Account", accountId.ToString(),
-																						"Macro", macroGuid + ".cms");
-																				if (File.Exists(macroFile)) {
-																					var macro = new UserDataFile.Macro(
-																						null);
-																					macro.LoadFile(macroFile);
-																					macro.RepeatCount =
-																						(byte) Convert.ChangeType(
-																							taskData["Repeats"],
-																							typeof(byte));
-																					macro.RepeatType =
-																						(MacroRepeatType) (byte) Convert
-																							.ChangeType(
-																								taskData["StopMode"],
-																								typeof(byte));
-																					macro.Id = KeyValues.GetKeyData2(
-																						driverValue);
-																					macrosById[macro.Id] = macro;
-																					macrosUserDataFile.Macros[macroGuid]
-																						= macro;
-																				}
-																			}
-																		}
-																	}
-																	else {
-																		driverValue = KeyValues.UnusedKeyValue;
-																	}
-																}
-
-																if (keyIndex >= 0 && keyIndex < driverValues.Length) {
-																	if (device.State.KeysByLogicCode.ContainsKey(
-																		keyIndex))
-																		Debug.WriteLine(
-																			device.State.KeysByLogicCode[keyIndex]
-																				.KeyName + " = " +
-																			(DriverValue) driverValue);
-																	driverValues[keyIndex] = driverValue;
-																}
-															}
-
-															device.SetKeys(layer, driverValues, i == 1);
-														}
-													}
-
-													//////////////////////////////////////////
-													// Lighting
-													//////////////////////////////////////////
-													var userDataFile = new UserDataFile();
-													var effects = new Dictionary<string, UserDataFile.LightingEffect>();
-													string[] leHeaders = {"ModeLE", "DriverLE"};
-													foreach (var leHeader in leHeaders)
-														if (data.ContainsKey(leHeader)) {
-															var leEntries = data[leHeader] as List<object>;
-															if (leEntries == null) {
-																// There's only one ModeLE
-																leEntries = new List<object>();
-																leEntries.Add(data[leHeader]);
-															}
-
-															foreach (var entry in leEntries) {
-																var modeLE = entry as Dictionary<string, object>;
-																var leGuid = (string) modeLE["GUID"];
-																var filePath = Path.Combine(UserDataPath, "Account",
-																	accountId.ToString(), "LE", leGuid + ".le");
-																if (!effects.ContainsKey(leGuid) &&
-																    File.Exists(filePath)) {
-																	var le = new UserDataFile.LightingEffect(
-																		userDataFile, null);
-																	le.Load(device.State,
-																		Encoding.UTF8.GetString(CMFile.Load(filePath)));
-																	le.Layers.Add(layer);
-																	userDataFile.LightingEffects[leGuid] = le;
-																	effects[leGuid] = le;
-																}
-															}
-														}
-
-													device.SetLighting(layer, userDataFile);
-
-													//////////////////////////////////////////
-													// Macros
-													//////////////////////////////////////////
-													device.SetMacros(layer, macrosUserDataFile);
-
-													device.SetLayer(layer);
-												}
-
-											session.Enqueue("onApplyResult", "{\"result\":1}");
-											response = successResponse;
-										}
-										else {
-											session.Enqueue("onApplyResult", "{\"result\":0}");
-										}
+									case APPLY_CONFIG: {
+										ApplyConfig(request, response, session, successResponse);
 									}
 										break;
-									case "ReadFile": {
+									case READ_FILE: {
 										var type = (int) Convert.ChangeType(request["Type"], typeof(int));
 										var path = (string) request["Path"];
 										string basePath = null;
@@ -515,7 +415,7 @@ namespace GK6X {
 										}
 									}
 										break;
-									case "WriteFile": {
+									case WRITE_FILE: {
 										var type = (int) Convert.ChangeType(request["Type"], typeof(int));
 										var path = (string) request["Path"];
 										var data = (string) request["Data"];
@@ -546,8 +446,8 @@ namespace GK6X {
 										}
 									}
 										break;
-									case "ReadLE": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+									case READ_LE: {
+										var accountId = ExtractAccountId(request);
 										var guid = (string) request["GUID"];
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "LE",
 											guid + ".le");
@@ -555,8 +455,9 @@ namespace GK6X {
 										if (File.Exists(file)) response = Encoding.UTF8.GetString(CMFile.Load(file));
 									}
 										break;
-									case "WriteLE": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+									case WRITE_LE: {
+										/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+										var accountId = ExtractAccountId(request);
 										var guid = (string) request["GUID"];
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "LE",
 											guid + ".le");
@@ -567,8 +468,8 @@ namespace GK6X {
 										response = successResponse;
 									}
 										break;
-									case "DeleteLE": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+									case DELETE_LE: {
+										var accountId = ExtractAccountId(request);
 										var guid = (string) request["GUID"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "LE",
@@ -579,8 +480,8 @@ namespace GK6X {
 										}
 									}
 										break;
-									case "ReadMacrofile": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+									case READ_MACROFILE: {
+										var accountId = ExtractAccountId(request);
 										var guid = (string) request["GUID"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "Macro",
@@ -646,8 +547,8 @@ namespace GK6X {
 										}
 									}
 										break;
-									case "WriteMacrofile": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+									case WRITE_MACROFILE: {
+										var accountId = ExtractAccountId(request);
 										var guid = (string) request["GUID"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "Macro",
@@ -683,8 +584,8 @@ namespace GK6X {
 										}
 									}
 										break;
-									case "DeleteMacrofile": {
-										var accountId = (int) Convert.ChangeType(request["AccoutID"], typeof(int));
+									case DELETE_MACROFILE: {
+										var accountId = ExtractAccountId(request);
 										var guid = (string) request["GUID"];
 										LazyCreateAccount(accountId);
 										var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "Macro",
@@ -700,6 +601,7 @@ namespace GK6X {
 								break;
 						}
 					}
+					// misc responses
 					else {
 						// This needs some sanitization...
 						var file = Path.Combine(dataPath, context.Request.Url.AbsolutePath.Substring(1));
@@ -757,6 +659,133 @@ namespace GK6X {
 				}
 
 				context.Response.OutputStream.Close();
+			}
+
+			private void ApplyConfig(Dictionary<string, object> request, string response, Session session,
+				string successResponse) {
+				/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				var accountId = ExtractAccountId(request);
+				var modelId = ExtractModelId(request);
+				var guid = (string) request["GUID"];
+				LazyCreateAccount(accountId);
+				var file = Path.Combine(UserDataPath, "Account", accountId.ToString(), "Devices", modelId.ToString(),
+					guid + ".cmf");
+				if (File.Exists(file)) {
+					var config = Encoding.UTF8.GetString(CMFile.Load(file));
+					var data = Json.Deserialize(config) as Dictionary<string, object>;
+					var modelIndex = (int) Convert.ChangeType(data["ModeIndex"], typeof(int));
+					var layer = (KeyboardLayer) modelIndex;
+
+					foreach (var device in KeyboardDeviceManager.GetConnectedDevices())
+						if (device.State.ModelId == modelId) {
+							var macrosById = new Dictionary<int, UserDataFile.Macro>();
+							var macrosUserDataFile = new UserDataFile();
+
+							//////////////////////////////////////////
+							// Keys
+							//////////////////////////////////////////
+							for (var i = 0; i < 2; i++) {
+								var setStr = i == 0 ? "KeySet" : "FnKeySet";
+								if (data.ContainsKey(setStr)) {
+									var driverValues = new uint[device.State.MaxLogicCode];
+									for (var j = 0; j < driverValues.Length; j++)
+										driverValues[j] = KeyValues.UnusedKeyValue;
+									var keys = data[setStr] as List<object>;
+									foreach (var keyObj in keys) {
+										var key = keyObj as Dictionary<string, object>;
+										var keyIndex = (int) Convert.ChangeType(key["Index"], typeof(int));
+										var driverValue = KeyValues.UnusedKeyValue;
+										var driverValueStr = (string) key["DriverValue"];
+										if (driverValueStr.StartsWith("0x")) {
+											if (uint.TryParse(driverValueStr.Substring(2), NumberStyles.HexNumber, null,
+												out driverValue)) {
+												if (KeyValues.GetKeyType(driverValue) == DriverValueType.Macro &&
+												    key.ContainsKey("Task")) {
+													var task = key["Task"] as Dictionary<string, object>;
+													if (task != null && (string) task["Type"] == "Macro") {
+														var taskData = task["Data"] as Dictionary<string, object>;
+														var macroGuid = (string) taskData["GUID"];
+														var macroFile = Path.Combine(UserDataPath, "Account",
+															accountId.ToString(), "Macro", macroGuid + ".cms");
+														if (File.Exists(macroFile)) {
+															var macro = new UserDataFile.Macro(null);
+															macro.LoadFile(macroFile);
+															macro.RepeatCount =
+																(byte) Convert.ChangeType(taskData["Repeats"],
+																	typeof(byte));
+															macro.RepeatType =
+																(MacroRepeatType) (byte) Convert.ChangeType(
+																	taskData["StopMode"], typeof(byte));
+															macro.Id = KeyValues.GetKeyData2(driverValue);
+															macrosById[macro.Id] = macro;
+															macrosUserDataFile.Macros[macroGuid] = macro;
+														}
+													}
+												}
+											}
+											else {
+												driverValue = KeyValues.UnusedKeyValue;
+											}
+										}
+
+										if (keyIndex >= 0 && keyIndex < driverValues.Length) {
+											if (device.State.KeysByLogicCode.ContainsKey(keyIndex))
+												Debug.WriteLine(device.State.KeysByLogicCode[keyIndex].KeyName + " = " +
+												                (DriverValue) driverValue);
+											driverValues[keyIndex] = driverValue;
+										}
+									}
+
+									device.SetKeys(layer, driverValues, i == 1);
+								}
+							}
+
+							//////////////////////////////////////////
+							// Lighting
+							//////////////////////////////////////////
+							var userDataFile = new UserDataFile();
+							var effects = new Dictionary<string, UserDataFile.LightingEffect>();
+							string[] leHeaders = {"ModeLE", "DriverLE"};
+							foreach (var leHeader in leHeaders)
+								if (data.ContainsKey(leHeader)) {
+									var leEntries = data[leHeader] as List<object>;
+									if (leEntries == null) {
+										// There's only one ModeLE
+										leEntries = new List<object>();
+										leEntries.Add(data[leHeader]);
+									}
+
+									foreach (var entry in leEntries) {
+										var modeLE = entry as Dictionary<string, object>;
+										var leGuid = (string) modeLE["GUID"];
+										var filePath = Path.Combine(UserDataPath, "Account", accountId.ToString(), "LE",
+											leGuid + ".le");
+										if (!effects.ContainsKey(leGuid) && File.Exists(filePath)) {
+											var le = new UserDataFile.LightingEffect(userDataFile, null);
+											le.Load(device.State, Encoding.UTF8.GetString(CMFile.Load(filePath)));
+											le.Layers.Add(layer);
+											userDataFile.LightingEffects[leGuid] = le;
+											effects[leGuid] = le;
+										}
+									}
+								}
+
+							device.SetLighting(layer, userDataFile);
+
+							//////////////////////////////////////////
+							// Macros
+							//////////////////////////////////////////
+							device.SetMacros(layer, macrosUserDataFile);
+
+							device.SetLayer(layer);
+						}
+
+					session.Enqueue("onApplyResult", "{\"result\":1}");
+					response = successResponse;
+				}
+				else {
+					session.Enqueue("onApplyResult", "{\"result\":0}");
+				}
 			}
 
 			private bool IsFileInDirectoryOrSubDirectory(string filePath, string directory) {

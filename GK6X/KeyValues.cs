@@ -8,20 +8,20 @@ using MiniJSON;
 
 namespace GK6X {
 	public static class KeyValues {
-        /// <summary>
-        ///     Unused key valey / invalid key value. Used for keys which aren't mapped on the keyboard.
-        /// </summary>
-        public const uint UnusedKeyValue = 0xFFFFFFFF;
+		/// <summary>
+		///     Unused key valey / invalid key value. Used for keys which aren't mapped on the keyboard.
+		/// </summary>
+		public const uint UnusedKeyValue = 0xFFFFFFFF;
 
 		public static List<Group> Groups = new List<Group>();
 		public static Dictionary<uint, Key> Keys = new Dictionary<uint, Key>();
 		public static Dictionary<int, Key> KeysByLogicCode = new Dictionary<int, Key>();
 
-        /// <summary>
-        ///     These map full driver values (4 bytes long) to the individual driver key codes (1 byte long)
-        ///     This is only for actual keys (things like VolumeUp don't appear here)
-        /// </summary>
-        public static Dictionary<uint, byte> LongToShortDriverValues = new Dictionary<uint, byte>();
+		/// <summary>
+		///     These map full driver values (4 bytes long) to the individual driver key codes (1 byte long)
+		///     This is only for actual keys (things like VolumeUp don't appear here)
+		/// </summary>
+		public static Dictionary<uint, byte> LongToShortDriverValues = new Dictionary<uint, byte>();
 
 		public static Dictionary<byte, uint> ShortToLongDriverValues = new Dictionary<byte, uint>();
 
@@ -132,24 +132,24 @@ namespace GK6X {
 			return DriverValueMouseButton.None;
 		}
 
-        /// <summary>
-        ///     Used to hold the value of the key and modifier keys (as well as other things on other key types)
-        /// </summary>
-        public static ushort GetKeyData(uint driverValue) {
+		/// <summary>
+		///     Used to hold the value of the key and modifier keys (as well as other things on other key types)
+		/// </summary>
+		public static ushort GetKeyData(uint driverValue) {
 			return (ushort) (driverValue & 0xFFFF);
 		}
 
-        /// <summary>
-        ///     Used to hold the actual value of the key
-        /// </summary>
-        public static byte GetKeyData1(uint driverValue) {
+		/// <summary>
+		///     Used to hold the actual value of the key
+		/// </summary>
+		public static byte GetKeyData1(uint driverValue) {
 			return (byte) ((driverValue >> 8) & 0xFF);
 		}
 
-        /// <summary>
-        ///     Used to hold additional data (such as the modifiers / macro index / keyboard layer / mouse button)
-        /// </summary>
-        public static byte GetKeyData2(uint driverValue) {
+		/// <summary>
+		///     Used to hold additional data (such as the modifiers / macro index / keyboard layer / mouse button)
+		/// </summary>
+		public static byte GetKeyData2(uint driverValue) {
 			return (byte) (driverValue & 0xFF);
 		}
 
@@ -177,40 +177,40 @@ namespace GK6X {
 		}
 
 		public class Key {
-            /// <summary>
-            ///     The key value which the keyboard firmware understands
-            /// </summary>
-            public uint DriverValue;
+			/// <summary>
+			///     The key value which the keyboard firmware understands
+			/// </summary>
+			public uint DriverValue;
 
-            /// <summary>
-            ///     Used for disabling multiple keys
-            /// </summary>
-            public int[] DriverValueArray;
+			/// <summary>
+			///     Used for disabling multiple keys
+			/// </summary>
+			public int[] DriverValueArray;
 
-            /// <summary>
-            ///     The owning group
-            /// </summary>
-            public Group Group;
+			/// <summary>
+			///     The owning group
+			/// </summary>
+			public Group Group;
 
-            /// <summary>
-            ///     Where the key appears visually
-            /// </summary>
-            public int LocationCode;
+			/// <summary>
+			///     Where the key appears visually
+			/// </summary>
+			public int LocationCode;
 
-            /// <summary>
-            ///     Where the index of the key as defined in the keyboard profile.json
-            /// </summary>
-            public int LogicCode;
+			/// <summary>
+			///     Where the index of the key as defined in the keyboard profile.json
+			/// </summary>
+			public int LogicCode;
 
-            /// <summary>
-            ///     The name of the key
-            /// </summary>
-            public string Name;
+			/// <summary>
+			///     The name of the key
+			/// </summary>
+			public string Name;
 
-            /// <summary>
-            ///     The localized name of the key (can be null)
-            /// </summary>
-            public LocalizedString Title;
+			/// <summary>
+			///     The localized name of the key (can be null)
+			/// </summary>
+			public LocalizedString Title;
 
 			public Key(Group group) {
 				LocationCode = -1;
@@ -232,10 +232,10 @@ namespace GK6X {
 	// The base layer is programmable, but the Fn key on base layer doesn't seem to be (possibly disabled out of fear
 	// that a user would unknowingly lock themselves out somehow?) This kind of sucks!
 
-    /// <summary>
-    ///     The key driver values as defined in the files
-    /// </summary>
-    public enum DriverValue : uint {
+	/// <summary>
+	///     The key driver values as defined in the files
+	/// </summary>
+	public enum DriverValue : uint {
 		None = 0,
 
 		///////////////////////////
@@ -244,10 +244,10 @@ namespace GK6X {
 
 		Esc = 0x02002900,
 
-        /// <summary>
-        ///     Disables the key
-        /// </summary>
-        Disabled = 0x02000000,
+		/// <summary>
+		///     Disables the key
+		/// </summary>
+		Disabled = 0x02000000,
 		F1 = 0x02003A00,
 		F2 = 0x02003B00,
 		F3 = 0x02003C00,
@@ -265,10 +265,10 @@ namespace GK6X {
 		Pause = 0x02004800, //PB
 
 		// --- end line ---
-        /// <summary>
-        ///     '`' key (backtick/grave/tilde)
-        /// </summary>
-        BackTick = 0x02003500,
+		/// <summary>
+		///     '`' key (backtick/grave/tilde)
+		/// </summary>
+		BackTick = 0x02003500,
 
 		// D = decimal (base 10)
 		D1 = 0x02001E00,
@@ -325,10 +325,10 @@ namespace GK6X {
 		// --- end line ---
 		LShift = 0x02000002,
 
-        /// <summary>
-        ///     Key between left shift and Z
-        /// </summary>
-        AltBackslash = 0x02006400,
+		/// <summary>
+		///     Key between left shift and Z
+		/// </summary>
+		AltBackslash = 0x02006400,
 		Z = 0x02001D00,
 		X = 0x02001B00,
 		C = 0x02000600,
@@ -339,10 +339,10 @@ namespace GK6X {
 		Comma = 0x02003600,
 		Period = 0x02003700,
 
-        /// <summary>
-        ///     '/' and '?'
-        /// </summary>
-        Slash = 0x02003800,
+		/// <summary>
+		///     '/' and '?'
+		/// </summary>
+		Slash = 0x02003800,
 		RShift = 0x02000020,
 		Up = 0x02005200,
 		LCtrl = 0x02000001,
@@ -525,10 +525,10 @@ namespace GK6X {
 		Mouse = 0x0101,
 		Key = 0x0200,
 
-        /// <summary>
-        ///     Open "My Computer", calculator, etc
-        /// </summary>
-        System = 0x0300,
+		/// <summary>
+		///     Open "My Computer", calculator, etc
+		/// </summary>
+		System = 0x0300,
 		Macro = 0x0A01,
 		TempSwitchLayer = 0x0A07
 	}

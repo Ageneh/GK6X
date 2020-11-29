@@ -62,6 +62,13 @@ namespace GK6X {
 			}
 		}
 
+		public static KeyboardDevice GetConnectedDeviceByModelId(long modelId) {
+			lock (connectedDevices) {
+				return GetConnectedDevices().FirstOrDefault(device => device.State.ModelId == modelId);
+			}
+		}
+
+		// for what is the handshake being used for?
 		public static void RefreshConnectedDevices() {
 			lock (connectedDevices) {
 				foreach (var device in DeviceList.Local.GetHidDevices()) {
@@ -91,6 +98,7 @@ namespace GK6X {
 								continue;
 							}
 
+							// for what is the handshake being used for?
 							var keyboardState = Handshake(stream);
 							if (keyboardState != null) {
 								var keyboardDevice = new KeyboardDevice();
